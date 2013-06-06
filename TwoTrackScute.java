@@ -343,7 +343,8 @@ public class TwoTrackScute extends Scute {
 			resultFile.println(line);
 		}
 		resultFile.close();
-		
+
+		//
 //		String inputString2 = BLANK + TRACK_SEPARATOR + "a";
 		String inputString2 = inputString;
 		Scanner inputFile2 = new Scanner(inputString2);
