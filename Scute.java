@@ -30,8 +30,11 @@ public class Scute {
 
 	public static final String[] geneLetters = { "c", "a", "g", "t", "z" };
 
-	public static final String BLANK = "blank";
+	public static final String ATOMIC_BLANK = "blank";
 	public static final String END_OF_FILE = "endOfFile";
+
+//	public static final boolean DEBUG = true;
+	 public static final boolean DEBUG = false;
 
 	protected static final Pattern nonAlphaNumeric = Pattern
 			.compile("[^a-zA-Z0-9]");
@@ -39,6 +42,7 @@ public class Scute {
 	protected static final Pattern nonWhiteSpace = Pattern.compile("[^\\s]");
 
 	protected String register;
+	protected String blank;
 	protected String[] alphabet;
 
 	protected ArrayList<String> memory;
@@ -66,22 +70,56 @@ public class Scute {
 		this.program = program;
 		memoryPointer = 0;
 		programPointer = 0;
+		if (alphabet != null) {
+			blank = findBlank(alphabet);
+		} else {
+			blank = ATOMIC_BLANK;
+		}
 		compile();
 		execute();
+	}
+
+	/**
+	 * @return the alphabet
+	 */
+	public String[] getAlphabet() {
+		return alphabet;
+	}
+
+	protected static String findBlank(String[] alphabet) {
+		// we may be modeling a multi-track scute whose real blank symbol looks
+		// something like "blank,blank" - so split on ',' and check whether
+		// every component is "blank"
+		for (String symbol : alphabet) {
+			String[] components = symbol.split(TwoTrackScute.TRACK_SEPARATOR);
+			boolean allBlank = true;
+			for (String component : components) {
+				if (!component.equals(ATOMIC_BLANK)) {
+					allBlank = false;
+					break;
+				}
+			}
+			if (allBlank) {
+				return symbol;
+			}
+		}
+		return null;
 	}
 
 	protected static String[] addBlank(String[] alphabet) {
 		if (alphabet == null) {
 			return null;
 		}
+		if (findBlank(alphabet) != null) {
+			return alphabet;
+		}
+
+		// the alphabet has no blank symbol, so add one and return a new
+		// alphabet
 		ArrayList<String> alphabetList = new ArrayList<String>(
 				Arrays.asList(alphabet));
-		if (alphabetList.contains(BLANK)) {
-			return alphabet;
-		} else {
-			alphabetList.add(BLANK);
-			return alphabetList.toArray(new String[] {});
-		}
+		alphabetList.add(ATOMIC_BLANK);
+		return alphabetList.toArray(new String[] {});
 	}
 
 	protected String getInstructionLabel(String instructionString) {
@@ -153,8 +191,10 @@ public class Scute {
 		boolean done = false;
 		while (!done) {
 			Instruction instruction = instructions[programPointer];
-//			 System.out.println("Executing " + instruction);
-//			 System.out.println("Before: " + this);
+			if (DEBUG) {
+				System.out.println("Executing " + instruction);
+				System.out.println("Before: " + this);
+			}
 
 			twoBools result = executeInstruction(instruction);
 
@@ -169,7 +209,9 @@ public class Scute {
 			if (instruction.getOpcode() == Instruction.HALT) {
 				done = true;
 			}
-//			 System.out.println("After: " + this);
+			if (DEBUG) {
+				System.out.println("After: " + this);
+			}
 		}
 	}
 
@@ -271,7 +313,7 @@ public class Scute {
 		if (memoryPointer >= memory.size()) {
 			int extraCells = memoryPointer - memory.size() + 1;
 			for (int i = 0; i < extraCells; i++) {
-				memory.add(BLANK);
+				memory.add(blank);
 			}
 		}
 	}

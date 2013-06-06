@@ -39,18 +39,18 @@ public class TwoTrackScute extends Scute {
 
 	protected twoTracks extractTracks(String symbol) throws ScuteException {
 		twoTracks tracks = new twoTracks();
-		if (symbol.equals(BLANK)) {
-			tracks.A = BLANK;
-			tracks.B = BLANK;
-		} else {
-			int boundary = symbol.indexOf(TRACK_SEPARATOR);
-			if (boundary == -1) {
-				throw new ScuteException(
-						"Couldn't find track separator in symbol " + symbol);
-			}
-			tracks.A = symbol.substring(0, boundary);
-			tracks.B = symbol.substring(boundary + 1);
+		// if (symbol.equals(ATOMIC_BLANK)) {
+		// tracks.A = ATOMIC_BLANK;
+		// tracks.B = ATOMIC_BLANK;
+		// } else {
+		int boundary = symbol.indexOf(TRACK_SEPARATOR);
+		if (boundary == -1) {
+			throw new ScuteException("Couldn't find track separator in symbol "
+					+ symbol);
 		}
+		tracks.A = symbol.substring(0, boundary);
+		tracks.B = symbol.substring(boundary + 1);
+		// }
 
 		return tracks;
 	}
@@ -76,11 +76,11 @@ public class TwoTrackScute extends Scute {
 		return source;
 	}
 
-	protected void executeOutput(Instruction instruction) throws IOException,
-			ScuteException {
-		String source = getSource(instruction, 'B');
-		outputFile.write(" " + source);
-	}
+	// protected void executeOutput(Instruction instruction) throws IOException,
+	// ScuteException {
+	// String source = getSource(instruction, 'B');
+	// outputFile.write(" " + source);
+	// }
 
 	protected void executeWriteA(Instruction instruction) throws ScuteException {
 		extendMemory();
@@ -98,10 +98,10 @@ public class TwoTrackScute extends Scute {
 		memory.set(memoryPointer, textToWrite);
 	}
 
-	protected void executeInput() {
-		super.executeInput();
-		register = BLANK + TRACK_SEPARATOR + register;
-	}
+//	protected void executeInput() {
+//		super.executeInput();
+//		register = ATOMIC_BLANK + TRACK_SEPARATOR + register;
+//	}
 
 	protected twoBools executeInstruction(Instruction instruction)
 			throws ScuteException, IOException {
@@ -149,11 +149,7 @@ public class TwoTrackScute extends Scute {
 		int i = 0;
 		for (String symbol1 : alphabet1) {
 			for (String symbol2 : alphabet2) {
-				if (symbol1 == BLANK && symbol2 == BLANK) {
-					retVal[i] = BLANK;
-				} else {
-					retVal[i] = symbol1 + TRACK_SEPARATOR + symbol2;
-				}
+				retVal[i] = symbol1 + TRACK_SEPARATOR + symbol2;
 				i++;
 			}
 		}
@@ -199,7 +195,8 @@ public class TwoTrackScute extends Scute {
 				}
 			}
 		}
-		Instruction[] newProgramArray = newProgram.toArray(new Instruction[]{});
+		Instruction[] newProgramArray = newProgram
+				.toArray(new Instruction[] {});
 		return newProgramArray;
 	}
 
@@ -216,58 +213,115 @@ public class TwoTrackScute extends Scute {
 	}
 
 	private void translateWriteA(Instruction instruction,
-			ArrayList<Instruction> newProgram) {
+			ArrayList<Instruction> newProgram) throws ScuteException {
+		translateWriteAorB(instruction, newProgram, 'A');
 
-		ArrayList<Instruction> registerContentJumps = new ArrayList<Instruction>();
-		ArrayList<Instruction> reads = new ArrayList<Instruction>();
-		ArrayList<Instruction> writes = new ArrayList<Instruction>();
-		int lineNum = newProgram.size();
-		String prefix = TRANSLATION_PREFIX + lineNum + ".";
-		String finalTarget = prefix + "done";
-		for (String symbol : alphabet) {
-			// instruction for jumping based on symbol
-			String target = prefix + symbol;
-			Instruction if1 = new Instruction(Instruction.IFJUMP, symbol,
-					target, null);
-			registerContentJumps.add(if1);
-
-			// instructions for reading and jumping based on value read
-			Instruction read = new Instruction(Instruction.READ, null, null,
-					target);
-			reads.add(read);
-			for (String symbol2 : alphabet) {
-				String target2 = target + "." + symbol2;
-				Instruction if2 = new Instruction(Instruction.IFJUMP, symbol2,
-						target2, null);
-				reads.add(if2);
-				// instructions for writing then reloading original symbol
-				String writeSymbol = instruction.symbol + TRACK_SEPARATOR
-						+ symbol;
-				Instruction write = new Instruction(Instruction.WRITE,
-						writeSymbol, null, target2);
-				writes.add(write);
-				Instruction load = new Instruction(Instruction.LOAD, symbol,
-						null, null);
-				writes.add(load);
-				Instruction jump = new Instruction(Instruction.JUMP, null,
-						finalTarget, null);
-				writes.add(jump);
-			}
-		}
-		// copy any label from the original instruction to the new first
-		// instruction
-		registerContentJumps.get(0).label = instruction.label;
-		// add a final no-op instruction where everyone jumps at the end
-		writes.add(new Instruction(Instruction.NOOP, null, null, finalTarget));
-
-		// add the three lists of instructions to the existing program
-		newProgram.addAll(registerContentJumps);
-		newProgram.addAll(reads);
-		newProgram.addAll(writes);
+//		ArrayList<Instruction> registerContentJumps = new ArrayList<Instruction>();
+//		ArrayList<Instruction> reads = new ArrayList<Instruction>();
+//		ArrayList<Instruction> writes = new ArrayList<Instruction>();
+//		int lineNum = newProgram.size();
+//		String prefix = TRANSLATION_PREFIX + lineNum + ".";
+//		String finalTarget = prefix + "done";
+//		for (String symbol : alphabet) {
+//			// instruction for jumping based on symbol
+//			String target = prefix + symbol;
+//			Instruction if1 = new Instruction(Instruction.IFJUMP, symbol,
+//					target, null);
+//			registerContentJumps.add(if1);
+//
+//			// instructions for reading and jumping based on value read
+//			Instruction read = new Instruction(Instruction.READ, null, null,
+//					target);
+//			reads.add(read);
+//			for (String symbol2 : alphabet) {
+//				String target2 = target + "." + symbol2;
+//				Instruction if2 = new Instruction(Instruction.IFJUMP, symbol2,
+//						target2, null);
+//				reads.add(if2);
+//				// instructions for writing then reloading original symbol
+//				String writeSymbol = instruction.symbol + TRACK_SEPARATOR
+//						+ symbol;
+//				Instruction write = new Instruction(Instruction.WRITE,
+//						writeSymbol, null, target2);
+//				writes.add(write);
+//				Instruction load = new Instruction(Instruction.LOAD, symbol,
+//						null, null);
+//				writes.add(load);
+//				Instruction jump = new Instruction(Instruction.JUMP, null,
+//						finalTarget, null);
+//				writes.add(jump);
+//			}
+//		}
+//		// copy any label from the original instruction to the new first
+//		// instruction
+//		registerContentJumps.get(0).label = instruction.label;
+//		// add a final no-op instruction where everyone jumps at the end
+//		writes.add(new Instruction(Instruction.NOOP, null, null, finalTarget));
+//
+//		// add the three lists of instructions to the existing program
+//		newProgram.addAll(registerContentJumps);
+//		newProgram.addAll(reads);
+//		newProgram.addAll(writes);
 	}
 
 	private void translateWriteB(Instruction instruction,
 			ArrayList<Instruction> newProgram) throws ScuteException {
+		translateWriteAorB(instruction, newProgram, 'B');
+		
+		
+//		ArrayList<Instruction> registerContentJumps = new ArrayList<Instruction>();
+//		ArrayList<Instruction> reads = new ArrayList<Instruction>();
+//		ArrayList<Instruction> writes = new ArrayList<Instruction>();
+//		int lineNum = newProgram.size();
+//		String prefix = TRANSLATION_PREFIX + lineNum + ".";
+//		String finalTarget = prefix + "done";
+//		for (String symbol : alphabet) {
+//			twoTracks tracks = extractTracks(symbol);
+//
+//			// instruction for jumping based on symbol
+//			String target = prefix + symbol;
+//			Instruction if1 = new Instruction(Instruction.IFJUMP, symbol,
+//					target, null);
+//			registerContentJumps.add(if1);
+//
+//			// instructions for reading and jumping based on value read
+//			Instruction read = new Instruction(Instruction.READ, null, null,
+//					target);
+//			reads.add(read);
+//			for (String symbol2 : alphabet) {
+//				String target2 = target + "." + symbol2;
+//				Instruction if2 = new Instruction(Instruction.IFJUMP, symbol2,
+//						target2, null);
+//				reads.add(if2);
+//				// instructions for writing then reloading original symbol
+//				String writeSymbol = tracks.A + TRACK_SEPARATOR
+//						+ instruction.symbol;
+//				Instruction write = new Instruction(Instruction.WRITE,
+//						writeSymbol, null, target2);
+//				writes.add(write);
+//				Instruction load = new Instruction(Instruction.LOAD, symbol,
+//						null, null);
+//				writes.add(load);
+//				Instruction jump = new Instruction(Instruction.JUMP, null,
+//						finalTarget, null);
+//				writes.add(jump);
+//			}
+//		}
+//		// copy any label from the original instruction to the new first
+//		// instruction
+//		registerContentJumps.get(0).label = instruction.label;
+//		// add a final no-op instruction where everyone jumps at the end
+//		writes.add(new Instruction(Instruction.NOOP, null, null, finalTarget));
+//
+//		// add the three lists of instructions to the existing program
+//		newProgram.addAll(registerContentJumps);
+//		newProgram.addAll(reads);
+//		newProgram.addAll(writes);
+	}
+
+	private void translateWriteAorB(Instruction instruction,
+			ArrayList<Instruction> newProgram, char track)
+			throws ScuteException {
 
 		ArrayList<Instruction> registerContentJumps = new ArrayList<Instruction>();
 		ArrayList<Instruction> reads = new ArrayList<Instruction>();
@@ -276,8 +330,7 @@ public class TwoTrackScute extends Scute {
 		String prefix = TRANSLATION_PREFIX + lineNum + ".";
 		String finalTarget = prefix + "done";
 		for (String symbol : alphabet) {
-			twoTracks tracks = extractTracks(symbol);
-			
+
 			// instruction for jumping based on symbol
 			String target = prefix + symbol;
 			Instruction if1 = new Instruction(Instruction.IFJUMP, symbol,
@@ -289,16 +342,30 @@ public class TwoTrackScute extends Scute {
 					target);
 			reads.add(read);
 			for (String symbol2 : alphabet) {
+				twoTracks tracks2 = extractTracks(symbol2);
 				String target2 = target + "." + symbol2;
 				Instruction if2 = new Instruction(Instruction.IFJUMP, symbol2,
 						target2, null);
 				reads.add(if2);
 				// instructions for writing then reloading original symbol
-				String writeSymbol = tracks.A + TRACK_SEPARATOR
-						+ instruction.symbol;
+				String writeSymbol = null;
+				switch (track) {
+				case 'A':
+					writeSymbol = instruction.symbol + TRACK_SEPARATOR
+							+ tracks2.B;
+					break;
+				case 'B':
+					writeSymbol = tracks2.A + TRACK_SEPARATOR
+							+ instruction.symbol;
+					break;
+				default:
+					throw new ScuteException("unexpected track name '" + track
+							+ "'");
+				}
 				Instruction write = new Instruction(Instruction.WRITE,
 						writeSymbol, null, target2);
 				writes.add(write);
+
 				Instruction load = new Instruction(Instruction.LOAD, symbol,
 						null, null);
 				writes.add(load);
@@ -318,13 +385,22 @@ public class TwoTrackScute extends Scute {
 		newProgram.addAll(reads);
 		newProgram.addAll(writes);
 	}
-	
-	
-	public static void main(String[] args) throws ScuteException, InstructionException, IOException {
-		String[] program = { "input", "write", "writeB 'b'", "read", "output",
+
+	public static void main(String[] args) throws ScuteException,
+			InstructionException, IOException {
+		String[] program = { "input", "writeA '1'", "writeB 'b'", "read", "output",
+				"move right",
+				"writeA '0'", 
+				"move right",
+				"writeB 'a'", 
+				"read", "output",
+				"move left",
+				"read", "output",
+				"writeB 'b'", 
+				"read", "output",
 				"halt", };
 
-		String inputString = BLANK + TRACK_SEPARATOR + "a";
+		String inputString = ATOMIC_BLANK + TRACK_SEPARATOR + "a";
 
 		StringWriter outputFile = new StringWriter();
 		Scanner inputFile = new Scanner(inputString);
@@ -339,18 +415,20 @@ public class TwoTrackScute extends Scute {
 		String[] translatedProgram = scute.translateToStrings();
 
 		PrintWriter resultFile = new PrintWriter(new FileWriter("result.txt"));
-		for ( String line : translatedProgram){
+		for (String line : translatedProgram) {
 			resultFile.println(line);
 		}
 		resultFile.close();
 
-		//
-//		String inputString2 = BLANK + TRACK_SEPARATOR + "a";
-		String inputString2 = inputString;
-		Scanner inputFile2 = new Scanner(inputString2);
+		System.out.println("******************************************");
+		System.out.println("******************************************");
+		System.out.println("******************************************");
+		System.out.println("******************************************");
+		
+		Scanner inputFile2 = new Scanner(inputString);
 		StringWriter outputFile2 = new StringWriter();
 		Scute translatedScute = new Scute(translatedProgram, inputFile2,
-				outputFile2);
+				outputFile2, scute.getAlphabet());
 		String output2 = outputFile2.toString();
 		System.out.println(output2);
 	}
